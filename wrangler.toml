@@ -1,0 +1,10 @@
+name = "hvac-test"
+compatibility_date = "2024-01-01"
+main = "worker/index.js"
+
+[vars]
+PLACE_ID = "YOUR_PLACE_ID_HERE"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
