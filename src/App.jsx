@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const COLORS = {
   sienna:   '#C1440E',
@@ -259,10 +259,73 @@ function Nav() {
   );
 }
 
+function HeroParticles({ isMobile }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const count = isMobile ? 35 : 80;
+    let particles = [];
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      particles = Array.from({ length: count }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 2 + 0.5,
+        speed: Math.random() * 0.35 + 0.08,
+        opacity: Math.random() * 0.35 + 0.05,
+        drift: (Math.random() - 0.5) * 0.25,
+      }));
+    };
+
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
+
+    let animId;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const p of particles) {
+        p.y -= p.speed;
+        p.x += p.drift;
+        if (p.y < -4) { p.y = canvas.height + 4; p.x = Math.random() * canvas.width; }
+        if (p.x < -4) p.x = canvas.width + 4;
+        if (p.x > canvas.width + 4) p.x = -4;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(212,180,131,${p.opacity})`;
+        ctx.fill();
+      }
+      animId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => { cancelAnimationFrame(animId); ro.disconnect(); };
+  }, [isMobile]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+    />
+  );
+}
+
 function Hero() {
   const [ctaHover, setCtaHover] = useState(false);
   const width = useWindowWidth();
   const isMobile = width < 700;
+  const isDesktop = width >= 900;
+
+  const trustSignals = [
+    'Same-Day Service',
+    'Free AC Inspection',
+    '24/7 Emergency Line',
+  ];
 
   return (
     <section style={{
@@ -274,79 +337,204 @@ function Hero() {
       overflow: 'hidden',
       paddingTop: 64,
     }}>
+      {/* dot-grid texture */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'radial-gradient(ellipse at 60% 40%, rgba(193,68,14,0.08) 0%, transparent 70%)',
+        backgroundImage: 'radial-gradient(circle, rgba(212,180,131,0.12) 1px, transparent 1px)',
+        backgroundSize: '28px 28px',
         pointerEvents: 'none',
       }} />
+      {/* sienna glow */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'radial-gradient(ellipse at 60% 40%, rgba(193,68,14,0.10) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+      {/* floating particles */}
+      <HeroParticles isMobile={isMobile} />
+
       <div style={{
         position: 'relative',
         maxWidth: 1100,
         margin: '0 auto',
         padding: isMobile ? '80px 24px' : '80px 48px',
         width: '100%',
+        display: isDesktop ? 'grid' : 'block',
+        gridTemplateColumns: isDesktop ? '1fr auto' : undefined,
+        gap: isDesktop ? 56 : undefined,
+        alignItems: isDesktop ? 'center' : undefined,
       }}>
-        <div style={{
-          fontFamily: "'Rockwell Condensed', Rockwell, serif",
-          fontSize: isMobile ? 38 : 56,
-          fontWeight: 700,
-          color: COLORS.white,
-          lineHeight: 1.1,
-          marginBottom: 8,
-        }}>
-          {CONTENT.hero.headline}
-        </div>
-        <div style={{
-          fontFamily: "'Rockwell Condensed', Rockwell, serif",
-          fontSize: isMobile ? 38 : 56,
-          fontWeight: 700,
-          color: COLORS.white,
-          lineHeight: 1.1,
-          marginBottom: 32,
-        }}>
-          {CONTENT.hero.subheadline}
-        </div>
-        <p style={{
-          fontFamily: 'Merriweather, serif',
-          fontSize: 17,
-          lineHeight: 1.7,
-          color: COLORS.sand,
-          maxWidth: 580,
-          marginBottom: 40,
-        }}>
-          {CONTENT.hero.body}
-        </p>
-        <button
-          onClick={() => scrollTo('contact')}
-          onMouseEnter={() => setCtaHover(true)}
-          onMouseLeave={() => setCtaHover(false)}
-          style={{
-            backgroundColor: ctaHover ? '#a33a0c' : COLORS.sienna,
-            color: COLORS.white,
-            border: 'none',
-            borderRadius: 6,
-            padding: isMobile ? '14px 28px' : '18px 40px',
-            fontFamily: 'Merriweather, serif',
-            fontSize: isMobile ? 16 : 18,
+        {/* left: headline + cta */}
+        <div>
+          <div style={{
+            fontFamily: "'Rockwell Condensed', Rockwell, serif",
+            fontSize: isMobile ? 38 : 56,
             fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'background-color 0.15s',
-            marginBottom: 24,
-            display: 'block',
-          }}
-        >
-          {CONTENT.hero.cta}
-        </button>
-        <div style={{
-          fontFamily: 'Merriweather, serif',
-          fontSize: 13,
-          color: COLORS.sand,
-          textTransform: 'uppercase',
-          letterSpacing: '0.1em',
-        }}>
-          {CONTENT.hero.badge}
+            color: COLORS.white,
+            lineHeight: 1.1,
+            marginBottom: 8,
+          }}>
+            {CONTENT.hero.headline}
+          </div>
+          <div style={{
+            fontFamily: "'Rockwell Condensed', Rockwell, serif",
+            fontSize: isMobile ? 38 : 56,
+            fontWeight: 700,
+            color: COLORS.white,
+            lineHeight: 1.1,
+            marginBottom: 32,
+          }}>
+            {CONTENT.hero.subheadline}
+          </div>
+          <p style={{
+            fontFamily: 'Merriweather, serif',
+            fontSize: 17,
+            lineHeight: 1.7,
+            color: COLORS.sand,
+            maxWidth: 520,
+            marginBottom: 40,
+          }}>
+            {CONTENT.hero.body}
+          </p>
+          <button
+            onClick={() => scrollTo('contact')}
+            onMouseEnter={() => setCtaHover(true)}
+            onMouseLeave={() => setCtaHover(false)}
+            style={{
+              backgroundColor: ctaHover ? '#a33a0c' : COLORS.sienna,
+              color: COLORS.white,
+              border: 'none',
+              borderRadius: 6,
+              padding: isMobile ? '14px 28px' : '18px 40px',
+              fontFamily: 'Merriweather, serif',
+              fontSize: isMobile ? 16 : 18,
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'background-color 0.15s',
+              marginBottom: 24,
+              display: 'block',
+            }}
+          >
+            {CONTENT.hero.cta}
+          </button>
+          <div style={{
+            fontFamily: 'Merriweather, serif',
+            fontSize: 13,
+            color: COLORS.sand,
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+          }}>
+            {CONTENT.hero.badge}
+          </div>
         </div>
+
+        {/* right: info card — desktop only */}
+        {isDesktop && (
+          <div style={{
+            width: 260,
+            flexShrink: 0,
+            backgroundColor: 'rgba(255,255,255,0.04)',
+            backdropFilter: 'blur(8px)',
+            border: `1px solid rgba(212,180,131,0.18)`,
+            borderLeft: `3px solid ${COLORS.sienna}`,
+            borderRadius: 8,
+            padding: '28px 24px',
+          }}>
+            {/* temperature badge */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 10,
+              marginBottom: 24,
+              paddingBottom: 24,
+              borderBottom: '1px solid rgba(212,180,131,0.15)',
+            }}>
+              <div style={{ fontSize: 26, lineHeight: 1 }}>☀</div>
+              <div>
+                <div style={{
+                  fontFamily: "'Rockwell Condensed', Rockwell, serif",
+                  fontSize: 15,
+                  color: COLORS.white,
+                  fontWeight: 700,
+                  marginBottom: 2,
+                }}>
+                  San Antonio, TX
+                </div>
+                <div style={{
+                  fontFamily: 'Merriweather, serif',
+                  fontSize: 13,
+                  color: COLORS.sand,
+                }}>
+                  July avg. high: <strong style={{ color: COLORS.sienna }}>97°F</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* trust signals */}
+            <div style={{ marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid rgba(212,180,131,0.15)' }}>
+              {trustSignals.map(signal => (
+                <div key={signal} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  marginBottom: 12,
+                }}>
+                  <div style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    backgroundColor: COLORS.sienna,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    fontSize: 11,
+                    color: COLORS.white,
+                    fontWeight: 700,
+                  }}>
+                    ✓
+                  </div>
+                  <div style={{
+                    fontFamily: 'Merriweather, serif',
+                    fontSize: 14,
+                    color: COLORS.cream,
+                  }}>
+                    {signal}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* phone */}
+            <div>
+              <a
+                href={`tel:${CONTENT.contact.phone.replace(/\D/g, '')}`}
+                style={{
+                  display: 'block',
+                  fontFamily: "'Rockwell Condensed', Rockwell, serif",
+                  fontSize: 22,
+                  fontWeight: 700,
+                  color: COLORS.sienna,
+                  textDecoration: 'none',
+                  marginBottom: 4,
+                }}
+              >
+                {CONTENT.contact.phone}
+              </a>
+              <div style={{
+                fontFamily: 'Merriweather, serif',
+                fontSize: 12,
+                color: COLORS.sand,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}>
+                Call anytime
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
