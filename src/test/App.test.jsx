@@ -1,10 +1,9 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import App from '../App.jsx';
+import App from '../../app/page.jsx';
 
 // Silence jsdom scroll errors
-window.HTMLElement.prototype.scrollIntoView = vi.fn();
-window.scrollTo = vi.fn();
+window.HTMLElement.prototype.scrollIntoView = jest.fn();
+window.scrollTo = jest.fn();
 
 describe('Nav', () => {
   it('renders the logo', () => {
@@ -136,7 +135,7 @@ describe('Contact', () => {
   });
 
   it('shows success message after successful form submission', async () => {
-    global.fetch = vi.fn().mockResolvedValue({ ok: true });
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
     render(<App />);
 
     fireEvent.change(screen.getByPlaceholderText('Your Name'), { target: { value: 'Test User' } });
@@ -150,7 +149,7 @@ describe('Contact', () => {
   });
 
   it('shows error message on failed form submission', async () => {
-    global.fetch = vi.fn().mockResolvedValue({ ok: false });
+    global.fetch = jest.fn().mockResolvedValue({ ok: false });
     render(<App />);
 
     fireEvent.submit(screen.getByRole('button', { name: 'Send Message' }).closest('form'));
@@ -161,7 +160,7 @@ describe('Contact', () => {
   });
 
   it('shows error message when fetch throws', async () => {
-    global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+    global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
     render(<App />);
 
     fireEvent.submit(screen.getByRole('button', { name: 'Send Message' }).closest('form'));
