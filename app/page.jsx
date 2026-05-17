@@ -246,9 +246,10 @@ function AnimatedStat({ stat }) {
     if (!triggered || num === null) return;
     const prefersReduced = typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) { setCount(num); return; }
-    const steps = 40;
-    const intervalMs = 1200 / steps;
+    // Jump instantly for reduced-motion users by using 1 step at 0ms delay;
+    // state update stays inside the interval callback to satisfy lint rules.
+    const steps = prefersReduced ? 1 : 40;
+    const intervalMs = prefersReduced ? 0 : 1200 / 40;
     let current = 0;
     const increment = num / steps;
     const timer = setInterval(() => {
