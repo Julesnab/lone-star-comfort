@@ -30,32 +30,26 @@ const CONTENT = {
     subheading: "Full-service HVAC for San Antonio's climate — not just your equipment, but your whole home's comfort.",
     items: [
       {
-        icon: '❄️',
         title: 'AC Installation & Repair',
         description: 'New systems, emergency repairs, and tune-ups for every major brand. We size systems correctly for Texas heat.',
       },
       {
-        icon: '💧',
         title: 'Humidity Control',
         description: "It's not just the heat — it's the humidity. We design and install whole-home dehumidification systems.",
       },
       {
-        icon: '🌬️',
         title: 'Ductwork Services',
         description: 'Leaky ducts can cost you 20–30% in efficiency. We inspect, seal, and replace ductwork the right way.',
       },
       {
-        icon: '🔥',
         title: 'Heating & Furnaces',
         description: 'When San Antonio winters turn cold fast, your heat needs to work. Repair, replacement, and annual tune-ups.',
       },
       {
-        icon: '🌿',
         title: 'Indoor Air Quality',
         description: 'UV purifiers, air scrubbers, and filtration systems that remove allergens, mold spores, and pollutants.',
       },
       {
-        icon: '📱',
         title: 'Smart Thermostats',
         description: 'Nest, Ecobee, and Honeywell installations. Control your comfort and cut your energy bill from your phone.',
       },
@@ -146,6 +140,155 @@ const CONTENT = {
   },
 };
 
+// --- SVG Icons (replacing emoji) ---
+
+function ServiceIcon({ idx, size = 32 }) {
+  const c = COLORS.sienna;
+  const shared = {
+    width: size, height: size, viewBox: '0 0 24 24',
+    fill: 'none', stroke: c, strokeWidth: '1.5',
+    strokeLinecap: 'round', strokeLinejoin: 'round',
+    'aria-hidden': 'true',
+  };
+
+  if (idx === 0) return (
+    // Snowflake — AC Installation & Repair
+    <svg {...shared}>
+      <line x1="12" y1="2" x2="12" y2="22" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+      <line x1="19.07" y1="4.93" x2="4.93" y2="19.07" />
+      <line x1="12" y1="7" x2="9" y2="5" />
+      <line x1="12" y1="7" x2="15" y2="5" />
+      <line x1="12" y1="17" x2="9" y2="19" />
+      <line x1="12" y1="17" x2="15" y2="19" />
+      <line x1="7" y1="12" x2="5" y2="9" />
+      <line x1="7" y1="12" x2="5" y2="15" />
+      <line x1="17" y1="12" x2="19" y2="9" />
+      <line x1="17" y1="12" x2="19" y2="15" />
+    </svg>
+  );
+
+  if (idx === 1) return (
+    // Water drop — Humidity Control
+    <svg {...shared}>
+      <path d="M12 2C8 7 4 12 4 16a8 8 0 0 0 16 0C20 12 16 7 12 2Z" />
+    </svg>
+  );
+
+  if (idx === 2) return (
+    // Wind lines — Ductwork Services
+    <svg {...shared}>
+      <path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2" />
+      <path d="M9.6 4.6A2 2 0 1 1 11 8H2" />
+      <path d="M12.6 19.4A2 2 0 1 0 14 16H2" />
+    </svg>
+  );
+
+  if (idx === 3) return (
+    // Flame — Heating & Furnaces
+    <svg {...shared}>
+      <path d="M12 2C8 8 6 12 6 16a6 6 0 0 0 12 0C18 12 16 8 12 2Z" />
+      <path d="M12 22c0 0 3-2.5 3-6-1 1.5-2 2-3 2s-2-.5-3-2c0 3.5 3 6 3 6Z" />
+    </svg>
+  );
+
+  if (idx === 4) return (
+    // Sparkles — Indoor Air Quality
+    <svg {...shared}>
+      <path d="M9 5L10.5 9.5L15 11L10.5 12.5L9 17L7.5 12.5L3 11L7.5 9.5Z" />
+      <path d="M18 2L18.75 4.25L21 5L18.75 5.75L18 8L17.25 5.75L15 5L17.25 4.25Z" />
+      <path d="M17 17L17.5 19L19.5 19.5L17.5 20L17 22L16.5 20L14.5 19.5L16.5 19Z" />
+    </svg>
+  );
+
+  // Smartphone — Smart Thermostats
+  return (
+    <svg {...shared}>
+      <rect x="5" y="2" width="14" height="20" rx="2" />
+      <line x1="12" y1="18" x2="12.01" y2="18" strokeWidth="2.5" />
+    </svg>
+  );
+}
+
+// --- Animated stat counter (scroll-triggered) ---
+
+function parseStatValue(val) {
+  const match = val.match(/^(\d+(?:\.\d+)?)(.*)/);
+  if (!match) return { num: null, suffix: val, hasDecimal: false };
+  return { num: parseFloat(match[1]), suffix: match[2], hasDecimal: match[1].includes('.') };
+}
+
+function AnimatedStat({ stat }) {
+  const ref = useRef(null);
+  const { num, suffix, hasDecimal } = parseStatValue(stat.value);
+  const [count, setCount] = useState(0);
+  const [triggered, setTriggered] = useState(false);
+
+  useEffect(() => {
+    if (num === null) return;
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTriggered(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [num]);
+
+  useEffect(() => {
+    if (!triggered || num === null) return;
+    const prefersReduced = typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) { setCount(num); return; }
+    const steps = 40;
+    const intervalMs = 1200 / steps;
+    let current = 0;
+    const increment = num / steps;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= num) { setCount(num); clearInterval(timer); }
+      else setCount(current);
+    }, intervalMs);
+    return () => clearInterval(timer);
+  }, [triggered, num]);
+
+  const displayValue = num !== null
+    ? (hasDecimal ? count.toFixed(1) : String(Math.round(count))) + suffix
+    : stat.value;
+
+  return (
+    <div ref={ref} style={{ textAlign: 'center', padding: '24px 16px' }}>
+      <div style={{
+        fontFamily: "'Rockwell Condensed', Rockwell, serif",
+        fontSize: 48,
+        fontWeight: 700,
+        color: COLORS.white,
+        lineHeight: 1,
+        marginBottom: 8,
+      }}>
+        {displayValue}
+      </div>
+      <div style={{
+        fontFamily: 'Merriweather, serif',
+        fontSize: 14,
+        color: COLORS.cream,
+        lineHeight: 1.4,
+      }}>
+        {stat.label}
+      </div>
+    </div>
+  );
+}
+
+// --- Hooks ---
+
 function useWindowWidth() {
   const [width, setWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   useEffect(() => {
@@ -160,6 +303,8 @@ function scrollTo(id) {
   const el = document.getElementById(id);
   if (el) el.scrollIntoView({ behavior: 'smooth' });
 }
+
+// --- Components ---
 
 function Nav() {
   const [bookHover, setBookHover] = useState(false);
@@ -267,6 +412,10 @@ function HeroParticles({ isMobile }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    // Respect user motion preferences
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
     const ctx = canvas.getContext('2d');
     const count = isMobile ? 35 : 80;
     let particles = [];
@@ -312,6 +461,7 @@ function HeroParticles({ isMobile }) {
   return (
     <canvas
       ref={canvasRef}
+      aria-hidden="true"
       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
     />
   );
@@ -340,7 +490,7 @@ function Hero() {
       paddingTop: 64,
     }}>
       {/* dot-grid texture */}
-      <div style={{
+      <div aria-hidden="true" style={{
         position: 'absolute',
         inset: 0,
         backgroundImage: 'radial-gradient(circle, rgba(212,180,131,0.12) 1px, transparent 1px)',
@@ -348,13 +498,12 @@ function Hero() {
         pointerEvents: 'none',
       }} />
       {/* sienna glow */}
-      <div style={{
+      <div aria-hidden="true" style={{
         position: 'absolute',
         inset: 0,
         background: 'radial-gradient(ellipse at 60% 40%, rgba(193,68,14,0.10) 0%, transparent 70%)',
         pointerEvents: 'none',
       }} />
-      {/* floating particles */}
       <HeroParticles isMobile={isMobile} />
 
       <div style={{
@@ -453,7 +602,18 @@ function Hero() {
               paddingBottom: 24,
               borderBottom: '1px solid rgba(212,180,131,0.15)',
             }}>
-              <div style={{ fontSize: 26, lineHeight: 1 }}>☀</div>
+              {/* Sun icon */}
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={COLORS.sand} strokeWidth="1.5" strokeLinecap="round" aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }}>
+                <circle cx="12" cy="12" r="4" />
+                <line x1="12" y1="2" x2="12" y2="5" />
+                <line x1="12" y1="19" x2="12" y2="22" />
+                <line x1="4.22" y1="4.22" x2="6.34" y2="6.34" />
+                <line x1="17.66" y1="17.66" x2="19.78" y2="19.78" />
+                <line x1="2" y1="12" x2="5" y2="12" />
+                <line x1="19" y1="12" x2="22" y2="12" />
+                <line x1="4.22" y1="19.78" x2="6.34" y2="17.66" />
+                <line x1="17.66" y1="6.34" x2="19.78" y2="4.22" />
+              </svg>
               <div>
                 <div style={{
                   fontFamily: "'Rockwell Condensed', Rockwell, serif",
@@ -492,11 +652,11 @@ function Hero() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0,
-                    fontSize: 11,
-                    color: COLORS.white,
-                    fontWeight: 700,
                   }}>
-                    ✓
+                    {/* Checkmark icon */}
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke={COLORS.white} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="2,6 5,9 10,3" />
+                    </svg>
                   </div>
                   <div style={{
                     fontFamily: 'Merriweather, serif',
@@ -545,10 +705,11 @@ function Hero() {
 function Services() {
   const [hovered, setHovered] = useState(null);
   const width = useWindowWidth();
+  const isMobile = width < 700;
   const cols = width < 600 ? 1 : width < 900 ? 2 : 3;
 
   return (
-    <section id="services" style={{ backgroundColor: COLORS.cream, padding: '96px 48px' }}>
+    <section id="services" style={{ backgroundColor: COLORS.cream, padding: isMobile ? '72px 20px' : '96px 48px' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         <h2 style={{
           fontFamily: "'Rockwell Condensed', Rockwell, serif",
@@ -585,12 +746,13 @@ function Services() {
                 borderLeft: `4px solid ${hovered === i ? '#a33a0c' : COLORS.sienna}`,
                 borderRadius: 6,
                 padding: '28px 24px',
-                transition: 'transform 0.15s',
+                transition: 'transform 0.15s, border-color 0.15s',
                 transform: hovered === i ? 'translateY(-3px)' : 'none',
-                cursor: 'default',
               }}
             >
-              <div style={{ fontSize: 32, marginBottom: 12 }}>{item.icon}</div>
+              <div style={{ marginBottom: 12 }}>
+                <ServiceIcon idx={i} size={32} />
+              </div>
               <h3 style={{
                 fontFamily: "'Rockwell Condensed', Rockwell, serif",
                 fontSize: 22,
@@ -625,7 +787,7 @@ function About() {
   const isMobile = width < 800;
 
   return (
-    <section id="about" style={{ backgroundColor: COLORS.sienna, padding: '96px 48px' }}>
+    <section id="about" style={{ backgroundColor: COLORS.sienna, padding: isMobile ? '72px 20px' : '96px 48px' }}>
       <div style={{
         maxWidth: 1100,
         margin: '0 auto',
@@ -667,6 +829,7 @@ function About() {
         <div style={{ position: 'relative' }}>
           <svg
             viewBox="0 0 100 100"
+            aria-hidden="true"
             style={{
               position: 'absolute',
               width: '100%',
@@ -686,26 +849,7 @@ function About() {
             position: 'relative',
           }}>
             {CONTENT.about.stats.map((stat, i) => (
-              <div key={i} style={{ textAlign: 'center', padding: '24px 16px' }}>
-                <div style={{
-                  fontFamily: "'Rockwell Condensed', Rockwell, serif",
-                  fontSize: 48,
-                  fontWeight: 700,
-                  color: COLORS.white,
-                  lineHeight: 1,
-                  marginBottom: 8,
-                }}>
-                  {stat.value}
-                </div>
-                <div style={{
-                  fontFamily: 'Merriweather, serif',
-                  fontSize: 14,
-                  color: COLORS.cream,
-                  lineHeight: 1.4,
-                }}>
-                  {stat.label}
-                </div>
-              </div>
+              <AnimatedStat key={i} stat={stat} />
             ))}
           </div>
         </div>
@@ -716,10 +860,11 @@ function About() {
 
 function WhyUs() {
   const width = useWindowWidth();
+  const isMobile = width < 700;
   const cols = width < 600 ? 1 : width < 900 ? 2 : 3;
 
   return (
-    <section id="why-us" style={{ backgroundColor: COLORS.cream, padding: '96px 48px' }}>
+    <section id="why-us" style={{ backgroundColor: COLORS.cream, padding: isMobile ? '72px 20px' : '96px 48px' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         <h2 style={{
           fontFamily: "'Rockwell Condensed', Rockwell, serif",
@@ -778,10 +923,11 @@ function WhyUs() {
 
 function Testimonials() {
   const width = useWindowWidth();
+  const isMobile = width < 700;
   const cols = width < 600 ? 1 : width < 900 ? 2 : 3;
 
   return (
-    <section style={{ backgroundColor: COLORS.charcoal, padding: '96px 48px' }}>
+    <section style={{ backgroundColor: COLORS.charcoal, padding: isMobile ? '72px 20px' : '96px 48px' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         <h2 style={{
           fontFamily: "'Rockwell Condensed', Rockwell, serif",
@@ -804,9 +950,11 @@ function Testimonials() {
               borderRadius: 6,
               padding: '32px 28px',
             }}>
-              <div style={{ marginBottom: 16 }}>
-                {'★'.repeat(item.stars).split('').map((s, j) => (
-                  <span key={j} style={{ color: COLORS.sienna, fontSize: 18 }}>{s}</span>
+              <div style={{ marginBottom: 16 }} aria-label={`${item.stars} out of 5 stars`}>
+                {Array.from({ length: item.stars }, (_, j) => (
+                  <svg key={j} width="18" height="18" viewBox="0 0 24 24" fill={COLORS.sienna} aria-hidden="true" style={{ display: 'inline-block', marginRight: 2 }}>
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2Z" />
+                  </svg>
                 ))}
               </div>
               <p style={{
@@ -843,6 +991,18 @@ function Testimonials() {
     </section>
   );
 }
+
+const srOnly = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: 'hidden',
+  clip: 'rect(0,0,0,0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+};
 
 function Contact() {
   const [submitted, setSubmitted] = useState(false);
@@ -887,7 +1047,7 @@ function Contact() {
   };
 
   return (
-    <section id="contact" style={{ backgroundColor: COLORS.cream, padding: '96px 48px' }}>
+    <section id="contact" style={{ backgroundColor: COLORS.cream, padding: isMobile ? '72px 20px' : '96px 48px' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         <h2 style={{
           fontFamily: "'Rockwell Condensed', Rockwell, serif",
@@ -981,7 +1141,10 @@ function Contact() {
                 textAlign: 'center',
                 borderLeft: `4px solid ${COLORS.sienna}`,
               }}>
-                <div style={{ fontSize: 40, marginBottom: 16 }}>✓</div>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={COLORS.sienna} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginBottom: 16 }}>
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="9,12 11,14 15,10" />
+                </svg>
                 <h3 style={{
                   fontFamily: "'Rockwell Condensed', Rockwell, serif",
                   fontSize: 26,
@@ -1003,10 +1166,18 @@ function Contact() {
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
-                <input name="name" type="text" placeholder="Your Name" required style={inputStyle} />
-                <input name="phone" type="tel" placeholder="Phone Number" style={inputStyle} />
-                <input name="email" type="email" placeholder="Email Address" required style={inputStyle} />
+                <label htmlFor="contact-name" style={srOnly}>Your Name</label>
+                <input id="contact-name" name="name" type="text" placeholder="Your Name" required style={inputStyle} />
+
+                <label htmlFor="contact-phone" style={srOnly}>Phone Number</label>
+                <input id="contact-phone" name="phone" type="tel" placeholder="Phone Number" style={inputStyle} />
+
+                <label htmlFor="contact-email" style={srOnly}>Email Address</label>
+                <input id="contact-email" name="email" type="email" placeholder="Email Address" required style={inputStyle} />
+
+                <label htmlFor="contact-message" style={srOnly}>How can we help?</label>
                 <textarea
+                  id="contact-message"
                   name="message"
                   placeholder="How can we help?"
                   rows={5}
@@ -1014,7 +1185,7 @@ function Contact() {
                   style={{ ...inputStyle, resize: 'vertical', marginBottom: 20 }}
                 />
                 {error && (
-                  <div style={{
+                  <div role="alert" style={{
                     fontFamily: 'Merriweather, serif',
                     fontSize: 14,
                     color: COLORS.sienna,

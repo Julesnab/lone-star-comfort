@@ -1,2 +1,15 @@
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; padding: 0; background: #FAF4EC; }
+
+:focus-visible {
+  outline: 2px solid #C1440E;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #C1440E;
+  outline-offset: 0;
+  border-radius: 4px;
+}
